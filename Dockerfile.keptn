@@ -1,0 +1,31 @@
+FROM alpine:3.15.4
+
+ENV KEPTN_VERSION=0.15.0
+ENV FILENAME=keptn-${KEPTN_VERSION}-linux-amd64
+ENV ZIPNAME=${FILENAME}.tar.gz
+ENV URL=https://github.com/keptn/keptn/releases/download/${KEPTN_VERSION}/${ZIPNAME}
+
+# Enable adding SSL root certificates
+RUN apk --no-cache add ca-certificates \
+    jq \
+    curl \
+    bash \
+    openssl \
+    openssl-dev \
+    grep \
+    bc
+
+# Install kubectl
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
+
+# Install keptn-cli
+RUN curl --fail -L ${URL} --output ${ZIPNAME} && tar -xvf ${ZIPNAME} && rm ${ZIPNAME} && mv ${FILENAME} /usr/local/bin/keptn
+RUN keptn set config KubeContextCheck false
+RUN keptn set config AutomaticVersionCheck false
+
+# Install yq
+RUN curl -sL https://github.com/mikefarah/yq/releases/download/v4.16.1/yq_linux_amd64 -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+
+# Install helm3
+RUN curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
